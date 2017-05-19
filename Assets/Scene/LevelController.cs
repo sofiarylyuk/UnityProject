@@ -7,13 +7,31 @@ public class LevelController : MonoBehaviour
 
 
     public static LevelController current;
-
+    
 
     void Awake()
     {
         current = this;
+//LevelController.current.getLifesCount();
+    }
+
+    Vector3 startingPosition;
+
+
+    public void setStartPosition(Vector3 pos)
+    {
+        this.startingPosition = pos;
 
     }
+
+
+    public void onRabitDeath(HeroRabbit rabit)
+    {
+
+        //При смерті кролика повертаємо на початкову позицію 
+        rabit.transform.position = this.startingPosition;
+    }
+
 
 }
 
