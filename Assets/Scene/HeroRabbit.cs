@@ -23,7 +23,19 @@ public class HeroRabbit : MonoBehaviour
     void FixedUpdate()
     {
         //[-1, 1]
+
         float value = Input.GetAxis("Horizontal");
+
+        Animator animator = GetComponent<Animator>();
+        if (Mathf.Abs(value) > 0){
+            animator.SetBool("run", true);
+        }
+        else{
+            animator.SetBool("run", false);
+        }
+
+       // LevelController.current.getLifesCount();
+
         if (Mathf.Abs(value) > 0)
         {
             Vector2 vel = myBody.velocity;
