@@ -5,7 +5,11 @@ using UnityEngine;
 public class HeroRabbit : MonoBehaviour
 {
 
-    public float speed = 1;
+
+    public int MaxHealth = 2;
+    int health = 1;
+
+    public float speed = 2;
     Rigidbody2D myBody = null;
 
     bool isGrounded = false;
@@ -16,17 +20,18 @@ public class HeroRabbit : MonoBehaviour
 
     Animator myController = null;
 
+    Vector3 targetScale = Vector3.one;
+
+    Transform rabbitParent = null;
 
 
-    // Use this for initialization
-    Transform heroParent = null;
     void Start()
     {
         //Зберегти стандартний батьківський GameObject
-        this.heroParent = this.transform.parent;
-    myBody = this.GetComponent<Rigidbody2D>();
+        myBody = this.GetComponent<Rigidbody2D>();
         myController = this.GetComponent<Animator>();
-        LevelController.current.setStartPosition(this.transform.position);
+        this.rabbitParent = this.transform.parent;
+        LevelInfo.current.setRabbitsStartingPoint(this.transform.position);
     }
 
     // Update is called once per frame
@@ -35,28 +40,95 @@ public class HeroRabbit : MonoBehaviour
 
     }
 
+     static void SetNewParent(Transform obj, Transform new_parent) {
+              if (obj.transform.parent != new_parent)
+              { 
+  // Засікаємо позицію у Глобальних координатах
+              Vector3 pos = obj.transform.position;
+  // Встановлюємо нового батька
+              obj.transform.parent = new_parent;
+  // Після зміни батька координати кролика зміняться
+   // Оскільки вони тепер відносно іншого об ’ єкта
+    // повертаємо кролика в ті самі глобальні координати
+              obj.transform.position = pos;
+              }
+          }
+
+    static void MakeChild(Transform obj, Transform my_parent) {
+        if (obj.transform.parent != my_parent)
+        {
+            Vector3 global_posistion = obj.transform.position;
+            obj.transform.parent = my_parent;
+            obj.transform.position = global_posistion;
+        }
+    } 
+
+    public void addHealth(int numb)
+    {
+        this.health += numb;
+        if (this.health > MaxHealth)
+        {
+            this.health = MaxHealth;
+        }
+        this.onHealthChange();
+    }
+
+    public void removeHealth (int numb)
+    {
+        this.health -= numb;
+        if (this.health < 0)
+        {
+            this.health = 0;
+        }
+        this.onHealthChange();
+    }
+
+    public void onHealthChange()
+    {
+        if(this.health == 1)
+        {
+            this.transform.localScale = Vector3.one;
+        }
+        else if(this.health == 2)
+        {
+            this.transform.localScale = Vector3.one*2;
+        }
+        else if (this.health == 0)
+        {
+            LevelInfo.current.onRabbitDeath(this);
+        }
+    }
+
     void FixedUpdate()
     {
         //[-1, 1]
         Vector3 from = transform.position + Vector3.up * 0.3f;
         Vector3 to = transform.position + Vector3.down * 0.1f;
-        Debug.DrawLine(from, to, Color.red);
 
-        float value = Input.GetAxis("Horizontal");
-        
-        if (Mathf.Abs(value) > 0)
+        int layer_id = 1 << LayerMask.NameToLayer("Ground");
+        RaycastHit2D hit = Physics2D.Linecast(from, to, layer_id);
+
+        if (hit)
         {
-            Vector2 vel = myBody.velocity;
-            vel.x = value * speed;
-            myBody.velocity = vel;
+            //Перевіряємо чи ми опинились на платформі
+            if (hit.transform != null
+            && hit.transform.GetComponent<MovingPlatform>() != null)
+            {
+                MakeChild(this.transform, hit.transform);
+                //Приліпаємо до платформи
+                // SetNewParent(this.transform, hit.transform);
+            }
+            isGrounded = true;
+        }
+        else
+        {
+            isGrounded = false;
+            MakeChild(this.transform, this.rabbitParent);
+            //Ми в повітрі відліпаємо під платформи
+            //SetNewParent(this.transform, this.heroParent);
         }
 
-         if (Mathf.Abs(value) > 0){
-            myController.SetBool("run", true);
-         }
-         else{
-            myController.SetBool("run", false);
-         }
+        Debug.DrawLine(from, to, Color.red);
 
         if (this.isGrounded)
         {
@@ -66,6 +138,28 @@ public class HeroRabbit : MonoBehaviour
         {
             myController.SetBool("jump", true);
         }
+
+
+
+        float value = Input.GetAxis("Horizontal");
+
+        if (Mathf.Abs(value) > 0)
+        {
+            Vector2 vel = myBody.velocity;
+            vel.x = value * speed;
+            myBody.velocity = vel;
+        }
+
+        if (Mathf.Abs(value) > 0)
+        {
+            myController.SetBool("run", true);
+        }
+        else
+        {
+            myController.SetBool("run", false);
+        }
+
+       
 
 
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
@@ -78,73 +172,41 @@ public class HeroRabbit : MonoBehaviour
             sr.flipX = false;
         }
 
-        int layer_id = 1 << LayerMask.NameToLayer("Ground");
+        
 
-        RaycastHit2D hit = Physics2D.Linecast(from, to, layer_id);
-        if (hit)
-        {
-            isGrounded = true;
-        }
-        else
-        {
-            isGrounded = false;
-        }
-       
+        
+      
 
-        if (Input.GetButtonDown("Jump") && isGrounded)
-        {
-            this.JumpActive = true;
-        }
 
-        if (this.JumpActive)
-        {
-            //Якщо кнопку ще тримають 
-            if (Input.GetButton("Jump")) {
-            this.JumpTime += Time.deltaTime;
-            if (this.JumpTime < this.MaxJumpTime)
+            if (Input.GetButtonDown("Jump") && isGrounded)
             {
-                Vector2 vel = myBody.velocity;
-
-                vel.y = JumpSpeed * (1.0f - JumpTime / MaxJumpTime);
-                myBody.velocity = vel;
+                this.JumpActive = true;
             }
-        }
-        else {
-            this.JumpActive = false; this.JumpTime = 0;
-        }
-    }
 
-        // Згадуємо g r o u n d check
- //RaycastHit2D hit = Physics2D.Linecast(from, to, layer_id);
-        if (hit)
-        {
-            //Перевіряємо чи ми опинились на платформі
-            if (hit.transform != null
-            && hit.transform.GetComponent<MovingPlatform>() != null)
+            if (this.JumpActive)
             {
-                //Приліпаємо до платформи
-                SetNewParent(this.transform, hit.transform);
-            }
-        }
-        else
-        {
-            //Ми в повітрі відліпаємо під платформи
-            SetNewParent(this.transform, this.heroParent);
-        }
-    }
+                //Якщо кнопку ще тримають 
+                if (Input.GetButton("Jump"))
+                {
+                    this.JumpTime += Time.deltaTime;
+                    if (this.JumpTime < this.MaxJumpTime)
+                    {
+                        Vector2 vel = myBody.velocity;
 
-   static void SetNewParent(Transform obj, Transform new_parent)
-    {
-        if (obj.transform.parent != new_parent)
-        {
-// Засікаємо позицію у Глобальних координатах
-        Vector3 pos = obj.transform.position;
-// Встановлюємо нового батька
-        obj.transform.parent = new_parent;
-// Після зміни батька координати кролика зміняться
- // Оскільки вони тепер відносно іншого об ’ єкта
-  // повертаємо кролика в ті самі глобальні координати
-        obj.transform.position = pos;
+                        vel.y = JumpSpeed * (1.0f - JumpTime / MaxJumpTime);
+                        myBody.velocity = vel;
+                    }
+                }
+                else
+                {
+                    this.JumpActive = false;
+                    this.JumpTime = 0;
+                }
+            }
+
+       // this.transform.localScale = Vector3.SmoothDamp(
+       //     this.transform.localScale, this.targetScale, ref scale_speed, 1.0f);
         }
+
+         
     }
-}

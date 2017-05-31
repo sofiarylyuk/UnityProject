@@ -4,38 +4,20 @@ using UnityEngine;
 
 public class Collectable : MonoBehaviour
 {
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-}
-
-   /* protected virtual void OnRabitHit(HeroRabbit rabit){
+   
+    public virtual void OnRabbitEnter(HeroRabbit rab){
     }
     
     void OnTriggerEnter2D(Collider2D collider)
     {
-        if (!this.hideAnimation)
-        {
             HeroRabbit rabit = collider.GetComponent<HeroRabbit>();
             if (rabit != null)
             {
-                this.OnRabitHit(rabit);
+                this.OnRabbitEnter(rabit);
             }
-        }
     }
-    public void CollectedHide()
+    public void hideCollectable()
     {
         Destroy(this.gameObject);
     }
 }
-// Use this for initialization
-
-}
-*/
