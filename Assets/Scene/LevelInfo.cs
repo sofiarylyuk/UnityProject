@@ -25,6 +25,16 @@ public class LevelInfo : MonoBehaviour
 
     public void addCoins(int numb)
     {
-        Debug.Log("coins colected" + numb);
+        Debug.Log("coins collected" + numb);
+    }
+
+    public void addCrystals(int numb)
+    {
+        Debug.Log("Crystal collected" + numb);
+    }
+
+    public void addFruits(int numb)
+    {
+        Debug.Log("Fruits colected" + numb);
     }
 }

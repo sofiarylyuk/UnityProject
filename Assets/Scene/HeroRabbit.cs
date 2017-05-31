@@ -7,7 +7,7 @@ public class HeroRabbit : MonoBehaviour
 
 
     public int MaxHealth = 2;
-    int health = 1;
+    public int health = 1;
 
     public float speed = 2;
     Rigidbody2D myBody = null;
@@ -23,6 +23,7 @@ public class HeroRabbit : MonoBehaviour
     Vector3 targetScale = Vector3.one;
 
     Transform rabbitParent = null;
+    public bool dead = false;
 
 
     void Start()
@@ -87,11 +88,11 @@ public class HeroRabbit : MonoBehaviour
     {
         if(this.health == 1)
         {
-            this.transform.localScale = Vector3.one;
+            this.transform.localScale = Vector3.one*2;
         }
         else if(this.health == 2)
         {
-            this.transform.localScale = Vector3.one*2;
+            this.transform.localScale = Vector3.one*4;
         }
         else if (this.health == 0)
         {
@@ -159,7 +160,18 @@ public class HeroRabbit : MonoBehaviour
             myController.SetBool("run", false);
         }
 
-       
+
+        if (dead)
+        {
+            myController.SetBool("death", true);
+        }
+        else
+        {
+
+            myController.SetBool("death", false);
+        }
+
+
 
 
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
