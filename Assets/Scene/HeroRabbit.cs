@@ -5,7 +5,6 @@ using UnityEngine;
 public class HeroRabbit : MonoBehaviour
 {
 
-
     public int MaxHealth = 2;
     public int health = 1;
 
@@ -25,6 +24,15 @@ public class HeroRabbit : MonoBehaviour
     Transform rabbitParent = null;
     public bool dead = false;
 
+    bool isHit = false;
+    public static HeroRabbit lastRabbit = null;
+
+
+
+    void Awake()
+    {
+        lastRabbit = this;
+    }
 
     void Start()
     {
@@ -97,6 +105,24 @@ public class HeroRabbit : MonoBehaviour
         else if (this.health == 0)
         {
             LevelInfo.current.onRabbitDeath(this);
+        }
+    }
+
+
+    void OnCollisionEnter2D(Collision2D coll)
+    {
+        if (coll.gameObject.tag == "Orc")
+        {
+            Orc o = coll.gameObject.GetComponent<Orc>();
+            Vector3 my = this.transform.position;
+            Vector3 it = o.transform.position;
+
+            if (o != null && my.y <= it.y)
+            {
+                this.dead = true;
+                isHit = true;
+                o.animator.SetTrigger("attack");
+            }
         }
     }
 
